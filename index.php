@@ -1,7 +1,22 @@
 <?php
-require __DIR__.'/functions.php';
 
-$ships = get_ships();
+use Service\BattleManager;
+use Service\Container;
+use Model\BrokenShip;
+
+require __DIR__.'/bootstrap.php';
+
+$container = new Container($configuration);
+
+$shipLoader = $container->getShipLoader();
+$ships = $shipLoader->getShips();
+
+$brokenShip = new BrokenShip('Just a hunk of metal');
+$ships[] = $brokenShip;
+
+$battleTypes = BattleManager::getAllBattleTypesWithDescriptions();
+
+$ships->removeAllBrokenShips();
 
 $errorMessage = '';
 if (isset($_GET['error'])) {
@@ -60,6 +75,7 @@ if (isset($_GET['error'])) {
                         <th>Weapon Power</th>
                         <th>Jedi Factor</th>
                         <th>Strength</th>
+                        <th>Type</th>
                         <th>Status</th>
                     </tr>
                 </thead>
@@ -70,6 +86,7 @@ if (isset($_GET['error'])) {
                             <td><?php echo $ship->getWeaponPower(); ?></td>
                             <td><?php echo $ship->getJediFactor(); ?></td>
                             <td><?php echo $ship->getStrength(); ?></td>
+                            <td><?php echo $ship->getType(); ?></td>
                             <td>
                                 <?php if ($ship->isFunctional()): ?>
                                     <i class="fa fa-sun-o"></i>
@@ -87,11 +104,11 @@ if (isset($_GET['error'])) {
                     <form method="POST" action="/battle.php">
                         <h2 class="text-center">The Mission</h2>
                         <input class="center-block form-control text-field" type="text" name="ship1_quantity" placeholder="Enter Number of Ships" />
-                        <select class="center-block form-control btn drp-dwn-width btn-default dropdown-toggle" name="ship1_name">
+                        <select class="center-block form-control btn drp-dwn-width btn-default dropdown-toggle" name="ship1_id">
                             <option value="">Choose a Ship</option>
-                            <?php foreach ($ships as $key => $ship): ?>
+                            <?php foreach ($ships as $ship): ?>
                                 <?php if ($ship->isFunctional()): ?>
-                                    <option value="<?php echo $key; ?>"><?php echo $ship->getNameAndSpecs(); ?></option>
+                                    <option value="<?php echo $ship->getId(); ?>"><?php echo $ship->getNameAndSpecs(); ?></option>
                                 <?php endif; ?>
                             <?php endforeach; ?>
                         </select>
@@ -99,15 +116,27 @@ if (isset($_GET['error'])) {
                         <p class="text-center">AGAINST</p>
                         <br>
                         <input class="center-block form-control text-field" type="text" name="ship2_quantity" placeholder="Enter Number of Ships" />
-                        <select class="center-block form-control btn drp-dwn-width btn-default dropdown-toggle" name="ship2_name">
+                        <select class="center-block form-control btn drp-dwn-width btn-default dropdown-toggle" name="ship2_id">
                             <option value="">Choose a Ship</option>
-                            <?php foreach ($ships as $key => $ship): ?>
+                            <?php foreach ($ships as $ship): ?>
                                 <?php if ($ship->isFunctional()): ?>
-                                    <option value="<?php echo $key; ?>"><?php echo $ship->getNameAndSpecs(); ?></option>
+                                    <option value="<?php echo $ship->getId(); ?>"><?php echo $ship->getNameAndSpecs(); ?></option>
                                 <?php endif; ?>
                             <?php endforeach; ?>
                         </select>
                         <br>
+
+                        <div class="text-center">
+                            <label for="battle_type">Battle Type</label>
+                            <select name="battle_type" id="battle_type" class="form-control drp-dwn-width center-block">
+                                <?php foreach ($battleTypes as $battleType => $typeText): ?>
+                                <option value="<?php echo $battleType ?>"><?php echo $typeText; ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+
+                        <br/>
+
                         <button class="btn btn-md btn-danger center-block" type="submit">Engage</button>
                     </form>
                 </div>
